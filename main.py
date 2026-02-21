@@ -1,44 +1,48 @@
-import telebot
-import requests
+import logging
+import yt_dlp
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-BOT_TOKEN = "8391969768:AAHOyiYlPwmHdj9wRio_etVCIv7uE0Y5FI8"
-ADMIN_ID = FFzarif
+TOKEN = "8391969768:AAHOyiYlPwmHdj9wRio_etVCIv7uE0Y5FI8"
 
-bot = telebot.TeleBot(BOT_TOKEN)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 
-# START
-@bot.message_handler(commands=['start'])
-def start(message):
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = telebot.types.KeyboardButton("📥 Video yuklash")
-    btn2 = telebot.types.KeyboardButton("👨‍💻 Admin")
-    markup.add(btn1, btn2)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("👋 Salom!\nInstagram link yubor — video yoki audio yuklab beraman.")
 
-    bot.send_message(message.chat.id, "Salom! Link yubor (Instagram/VK)", reply_markup=markup)
+async def download_instagram(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = update.message.text
 
-# ADMIN
-@bot.message_handler(func=lambda m: m.text == "👨‍💻 Admin")
-def admin(message):
-    bot.send_message(message.chat.id, "Admin: @username")
+    if "instagram.com" not in url:
+        await update.message.reply_text("❗ Faqat Instagram link yubor.")
+        return
 
-# VIDEO DOWNLOAD
-@bot.message_handler(func=lambda message: True)
-def download(message):
-    url = message.text
+    await update.message.reply_text("⏳ Yuklanmoqda...")
 
-    if "instagram.com" in url:
-        api = f"https://api.vevioz.com/api/button/mp4?url={url}"
-        
-        bot.send_message(message.chat.id, "⏳ Yuklanmoqda...")
-        bot.send_message(message.chat.id, api)
+    ydl_opts = {
+        'outtmpl': 'video.%(ext)s',
+        'format': 'best',
+        'quiet': True
+    }
 
-    elif "vk.com" in url:
-        api = f"https://api.vevioz.com/api/button/mp4?url={url}"
-        
-        bot.send_message(message.chat.id, "⏳ Yuklanmoqda...")
-        bot.send_message(message.chat.id, api)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
 
-    else:
-        bot.send_message(message.chat.id, "❌ Noto‘g‘ri link yubording")
+        await update.message.reply_video(video=open(filename, 'rb'))
 
-bot.polling()
+    except Exception as e:
+        await update.message.reply_text("❌ Xatolik yuz berdi.")
+
+if name == 'main':
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download_instagram))
+
+    print("Bot ishga tushdi...")
+    app.run_polling()
