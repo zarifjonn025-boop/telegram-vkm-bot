@@ -1,2 +1,2 @@
-pyTelegramBotApi
+pyTelegramBotAPI
 yt-dIp
