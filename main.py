@@ -1,7 +1,7 @@
 import telebot
 import requests
 
-BOT_TOKEN = 8391969768:AAHOyiYlPwmHdj9wRio_etVCIv7uE0Y5FI8
+BOT_TOKEN = "8391969768:AAHOyiYlPwmHdj9wRio_etVCIv7uE0Y5FI8"
 ADMIN_ID = FFzarif
 
 bot = telebot.TeleBot(BOT_TOKEN)
